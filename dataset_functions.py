@@ -11,6 +11,7 @@ import os
 
 def reduce_dataset(input_folder, output_folder, num_images):
     # folders = os.listdir(input_folder)
+    replicate_folder_structure(input_folder, output_folder)
 
     folders = [f for f in os.listdir(input_folder) if os.path.isdir(os.path.join(input_folder, f))]
 
@@ -26,6 +27,8 @@ def reduce_dataset(input_folder, output_folder, num_images):
 
 
 def replicate_folder_structure(input_folder, output_folder):
+    print("Replicating folder structure...")
+
     if not os.path.isdir(output_folder):
         os.mkdir(output_folder)
 
