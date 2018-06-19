@@ -1,4 +1,7 @@
 import argparse
+import io
+import pickle
+import zipfile
 from zipfile import ZipFile
 import shutil
 import ntpath
@@ -8,6 +11,8 @@ import math
 import numpy as np
 import cv2
 import os
+
+import time
 
 
 def create_zip_from_dataset(input_folder, output_folder, num_images=3, bundle_size=16):
@@ -47,6 +52,41 @@ def create_zip_from_dataset(input_folder, output_folder, num_images=3, bundle_si
 
         # delete the images, keep the zip only, then go to the next bundle
         shutil.rmtree(image_dump_folder)
+
+def download_api_results(output_folder, bundle_dict_path, sleep_time):
+    bundle_dict = pickle.load(open(bundle_dict_path, 'rb'))
+    if not os.path.isdir(output_folder):
+        os.mkdir(output_folder)
+
+    # for bundle, response in bundle_dict.items():
+    #     print(bundle, response, "<Response [200]>" not in str(response))
+
+    for bundle, response in bundle_dict.items():
+        if "<Response [200]>" not in str(response):
+            continue
+
+        bundle_folder = os.path.join(output_folder, bundle.split(".")[0])
+        if os.path.isdir(bundle_folder):
+            print("Already downloaded! Skipping " + bundle)
+            continue
+
+        print("Getting " + bundle)
+        process_id = json.loads(response.text)['processId']
+
+        # build the download link using processId
+        url = "http://yourface.3duniversum.com/uploaded/" + process_id + "/batch_processed.zip"
+        res = requests.get(url)
+        if not res.ok:
+            print("File not found! Skipping " + bundle)
+            continue
+        else:
+            print("Download successful!")
+
+        zip_file = zipfile.ZipFile(io.BytesIO(res.content))
+
+        zip_file.extractall(bundle_folder)
+        zip_file.close()
+        time.sleep(sleep_time)
 
 
 def add_api_results(path_to_zip, path_to_dataset, num_images, num_augments):
