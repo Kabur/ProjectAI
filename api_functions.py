@@ -53,6 +53,7 @@ def create_zip_from_dataset(input_folder, output_folder, num_images=3, bundle_si
         # delete the images, keep the zip only, then go to the next bundle
         shutil.rmtree(image_dump_folder)
 
+
 def download_api_results(output_folder, bundle_dict_path, sleep_time):
     bundle_dict = pickle.load(open(bundle_dict_path, 'rb'))
     if not os.path.isdir(output_folder):
@@ -75,54 +76,101 @@ def download_api_results(output_folder, bundle_dict_path, sleep_time):
 
         # build the download link using processId
         url = "http://yourface.3duniversum.com/uploaded/" + process_id + "/batch_processed.zip"
+        start_time = time.time()
         res = requests.get(url)
         if not res.ok:
             print("File not found! Skipping " + bundle)
             continue
-        else:
-            print("Download successful!")
 
-        zip_file = zipfile.ZipFile(io.BytesIO(res.content))
+        try:
+            zip_file = zipfile.ZipFile(io.BytesIO(res.content))
+        except Exception as e:
+            print(str(e) + "skipping bundle " + bundle)
+            continue
 
         zip_file.extractall(bundle_folder)
         zip_file.close()
+        print("Download successful! Time: " + str(time.time() - start_time))
         time.sleep(sleep_time)
 
 
-def add_api_results(path_to_zip, path_to_dataset, num_images, num_augments):
-    print("this function is not done yet")
-    # todo: just finish this function xD
-    # responses = pickle.load(open('pickled_responses.pkl', 'rb'))
-    # file_found = []
-    #
-    # for r in responses:
-    #     print("*" * 50)
-    #     r_json = json.loads(r.text)
-    #     process_id = r_json['processId']
-    #     print('text: ', r.text)
-    #     print('r: ', r)
-    #     print('processId: ', process_id)
-    #
-    #     # build the download link using processId
-    #     url = "http://yourface.3duniversum.com/uploaded/" + process_id + "/batch_processed.zip"
-    #     res = requests.get(url)
-    #     if not res.ok:
-    #         print("File not found!")
-    #         file_found.append(False)
-    #         continue
-    #     else:
-    #         file_found.append(True)
-    #
-    #     zip_file = zipfile.ZipFile(io.BytesIO(res.content))
-    #
-    #     folder = "batch_processed_testing_" + process_id
-    #     if not os.path.isdir(folder):
-    #         os.mkdir(folder)
-    #
-    #     zip_file.extractall(folder)
-    #     zip_file.close()
-    pass
+"""
+ordering cancer:
+0.0 -> 0
+0.1 -> 1
+0.2 -> 12
+1.0 -> 17
+1.1 -> 18
+1.2 -> 19
+2.0 -> 20
+2.1 -> 21
+2.2 -> 22
+3.0 -> 23
+3.1 -> 2
+3.2 -> 3
+4.0 -> 4
+4.1 -> 5
+4.2 -> 6
+5.0 -> 7
+5.1 -> 8
+5.2 -> 9
+6.0 -> 10
+6.1 -> 11
+6.2 -> 13
+7.0 -> 14
+7.1 -> 15
+7.2 -> 16
+"""
 
+
+# def add_api_results(path_to_zip, path_to_dataset, num_images, num_augments):
+def reorganize_results(bundle_folder, processed_bundle_folder, output_folder, augment_types):
+    if not os.path.isdir(output_folder):
+        os.mkdir(output_folder)
+
+    # get all processed bundles(folders)
+    processed_bundles = [f for f in os.listdir(processed_bundle_folder) if
+                         os.path.isdir(os.path.join(processed_bundle_folder, f))]
+
+    for bundle in processed_bundles:
+        # open the original zip and get the list of file names
+        zip = zipfile.ZipFile(os.path.join(bundle_folder, bundle + ".zip"))
+        orig_file_names = zip.namelist()
+
+        # I'm so titled I'm not even going to bother explaining why this is needed
+        cancer = [0, 1, 12, 17, 18, 19, 20, 21, 22, 23, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16]
+
+        for i, file_name in enumerate(orig_file_names):
+            # the beginning of the file name is the name of the original folder = the identity of the person
+            folder_name = file_name.split("_")[0]
+
+            if not os.path.isdir(os.path.join(output_folder, folder_name)):
+                os.mkdir(os.path.join(output_folder, folder_name))
+
+            # copy all augmented files to that person's folder
+            for augment in augment_types:
+                # i represents the number of the folder inside the processed bundle, each containts multiple augments for 1 image
+                shutil.copy2(os.path.join(processed_bundle_folder, bundle, str(cancer[i]), augment),
+                             os.path.join(output_folder, folder_name))
+                os.rename(os.path.join(output_folder, folder_name, augment),
+                          os.path.join(output_folder, folder_name, file_name.split(".")[0] + "_" + augment))
+
+        """
+        for i, file_name in enumerate(orig_file_names):
+            # the beginning of the file name is the name of the original folder = the identity of the person
+            folder_name = file_name.split("_")[0]
+
+            if not os.path.isdir(os.path.join(output_folder, folder_name)):
+                os.mkdir(os.path.join(output_folder, folder_name))
+
+            # copy all augmented files to that person's folder
+            for augment in augment_types:
+                # i represents the number of the folder inside the processed bundle, each containts multiple augments for 1 image
+                shutil.copy2(os.path.join(processed_bundle_folder, bundle, str(i), augment),
+                             os.path.join(output_folder, folder_name))
+                os.rename(os.path.join(output_folder, folder_name, augment),
+                          os.path.join(output_folder, folder_name, file_name.split(".")[0] + "_" + augment))
+        """
 
 def query_api(yaw, pitch, roll, bundle_path, email):
     url = 'http://yourface.3duniversum.com/api/faceGen/upload'
