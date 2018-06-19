@@ -56,17 +56,24 @@ if __name__ == '__main__':
     """"""""""""""""""""""""""""""""""""
 
     """ Download the processed bundles """
-    output_folder = os.path.join("C:\\", "Users", "Kabur", "Desktop", "ProjectAI", "processed_bundles")
-    bundle_dict_path = "pickled_bundle_dict.pkl"
-
-    download_api_results(output_folder, bundle_dict_path, sleep_time=1)
+    # output_folder = os.path.join("C:\\", "Users", "Kabur", "Desktop", "ProjectAI", "processed_bundles")
+    # bundle_dict_path = "pickled_bundle_dict.pkl"
+    #
+    # download_api_results(output_folder, bundle_dict_path, sleep_time=1)
     """"""""""""""""""""""""""""""""""""
 
     """ Once you have the API result, use this to merge the result with our datasset(the reduced one) """
-    # path_to_zip = os.path.join('C:\\', 'Users', 'Kabur', 'Desktop', 'ProjectAI', 'batch_processed_testing.zip')
-    # path_to_dataset = os.path.join('E:\\', 'vggface2_train_testing', 'train')
-    # num_images = 1  # how many images per person were used in the query
-    # num_augments = 3  # how many augments per image
-    #
-    # add_api_results(path_to_zip, path_to_dataset, num_images, num_augments)
+    # bundle_folder = os.path.join('C:\\', 'Users', 'Kabur', 'Desktop', 'ProjectAI', 'projectAI_bundles_3_8')
+    # processed_bundle_folder = os.path.join('C:\\', 'Users', 'Kabur', 'Desktop', 'ProjectAI', 'processed_bundles')
+    # output_folder = os.path.join('C:\\', 'Users', 'Kabur', 'Desktop', 'ProjectAI', 'data', 'vggface2_train_augmented')
+
+    bundle_folder = os.path.join('C:\\', 'Users', 'Kabur', 'Desktop', 'ProjectAI', 'merge_testing', 'projectAI_bundles_3_8')
+    processed_bundle_folder = os.path.join('C:\\', 'Users', 'Kabur', 'Desktop', 'ProjectAI', 'merge_testing', 'processed_bundles')
+    output_folder = os.path.join('C:\\', 'Users', 'Kabur', 'Desktop', 'ProjectAI', 'merge_testing', 'vggface2_train_augmented')
+
+    augment_types = ["default_HazzBerry_obsidianBlack_p0_y0_r0.png",
+                     "default_HazzBerry_obsidianBlack_p0_y15_r0.png",
+                     "default_HazzBerry_obsidianBlack_p0_y-15_r0.png"]
+
+    reorganize_results(bundle_folder, processed_bundle_folder, output_folder, augment_types)
     """"""""""""""""""""""""""""""""""""
